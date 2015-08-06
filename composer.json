@@ -1,0 +1,12 @@
+{
+    "require": {
+        "symfony/http-kernel": "^2.7",
+        "symfony/dependency-injection": "^2.7",
+        "symfony/routing": "^2.7",
+        "symfony/yaml": "^2.7",
+        "symfony/finder": "^2.7",
+        "symfony/config": "^2.7",
+        "symfony/console": "^2.7",
+        "doctrine/mongodb": "^1.1"
+    }
+}
