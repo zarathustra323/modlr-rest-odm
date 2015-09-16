@@ -1,6 +1,6 @@
 <?php
 
-namespace Zarathustra\ModlrData\DataTypes\Types;
+namespace Zarathustra\Modlr\RestOdm\DataTypes\Types;
 
 /**
  * The type interface that all data type objects must use.

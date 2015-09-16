@@ -1,6 +1,6 @@
 <?php
 
-namespace Zarathustra\ModlrData\Exception;
+namespace Zarathustra\Modlr\RestOdm\Exception;
 
 /**
  * InvalidArgumentException.

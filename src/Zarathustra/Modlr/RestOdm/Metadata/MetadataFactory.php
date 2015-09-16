@@ -1,11 +1,11 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata;
+namespace Zarathustra\Modlr\RestOdm\Metadata;
 
-use Zarathustra\ModlrData\Exception\MetadataException;
-use Zarathustra\ModlrData\Metadata\Driver\DriverInterface;
-use Zarathustra\ModlrData\Metadata\Cache\CacheInterface;
-use Zarathustra\ModlrData\Util\Inflector;
+use Zarathustra\Modlr\RestOdm\Exception\MetadataException;
+use Zarathustra\Modlr\RestOdm\Metadata\Driver\DriverInterface;
+use Zarathustra\Modlr\RestOdm\Metadata\Cache\CacheInterface;
+use Zarathustra\Modlr\RestOdm\Util\Inflector;
 
 /**
  * The primary MetadataFactory service.

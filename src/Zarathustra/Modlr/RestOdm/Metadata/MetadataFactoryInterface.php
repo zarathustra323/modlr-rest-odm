@@ -1,6 +1,6 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata;
+namespace Zarathustra\Modlr\RestOdm\Metadata;
 
 /**
  * Defines the implementation of a MetadataFactory object.
@@ -14,7 +14,7 @@ interface MetadataFactoryInterface
      *
      * @param   string              $type
      * @return  EntityMetadata
-     * @throws  \Zarathustra\ModlrData\Exception\MetadataException  If metadata was not found.
+     * @throws  \Zarathustra\Modlr\RestOdm\Exception\MetadataException  If metadata was not found.
      */
     public function getMetadataForType($type);
 

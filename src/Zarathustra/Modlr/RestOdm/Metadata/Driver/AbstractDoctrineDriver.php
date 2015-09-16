@@ -1,11 +1,11 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Driver;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Driver;
 
 use Doctrine\Common\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Common\Persistence\Mapping\MappingException;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
-use Zarathustra\ModlrData\Exception\MetadataException;
+use Zarathustra\Modlr\RestOdm\Exception\MetadataException;
 
 /**
  * The abstract Doctrine metadata driver.
@@ -94,7 +94,7 @@ abstract class AbstractDoctrineDriver implements DriverInterface
      *
      * @abstract
      * @param   ClassMetadata   $metadata
-     * @return  \Zarathustra\ModlrData\Metadata\EntityMetadata
+     * @return  \Zarathustra\Modlr\RestOdm\Metadata\EntityMetadata
      */
     abstract protected function loadFromClassMetadata(ClassMetadata $metadata);
 

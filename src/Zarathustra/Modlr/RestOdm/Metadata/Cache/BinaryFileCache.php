@@ -1,8 +1,8 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Cache;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Cache;
 
-use Zarathustra\ModlrData\Metadata\EntityMetadata;
+use Zarathustra\Modlr\RestOdm\Metadata\EntityMetadata;
 
 /**
  * Caches and retrieves EntityMetadata objects from the file system using igbinary serialization.

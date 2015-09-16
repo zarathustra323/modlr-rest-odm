@@ -1,9 +1,9 @@
 <?php
 
-namespace Zarathustra\ModlrData\DataTypes;
+namespace Zarathustra\Modlr\RestOdm\DataTypes;
 
-use Zarathustra\ModlrData\DataTypes\Types\TypeInterface;
-use Zarathustra\ModlrData\Exception\InvalidArgumentException;
+use Zarathustra\Modlr\RestOdm\DataTypes\Types\TypeInterface;
+use Zarathustra\Modlr\RestOdm\Exception\InvalidArgumentException;
 
 /**
  * Responsible for loading attribute data type classes.
@@ -23,14 +23,14 @@ class TypeFactory
      * @var array
      */
     private $types = [
-        'array'     => 'Zarathustra\ModlrData\DataTypes\Types\ArrayType',
-        'boolean'   => 'Zarathustra\ModlrData\DataTypes\Types\BooleanType',
-        'date'      => 'Zarathustra\ModlrData\DataTypes\Types\DateType',
-        'float'     => 'Zarathustra\ModlrData\DataTypes\Types\FloatType',
-        'integer'   => 'Zarathustra\ModlrData\DataTypes\Types\IntegerType',
-        'mixed'     => 'Zarathustra\ModlrData\DataTypes\Types\MixedType',
-        'object'    => 'Zarathustra\ModlrData\DataTypes\Types\ObjectType',
-        'string'    => 'Zarathustra\ModlrData\DataTypes\Types\StringType',
+        'array'     => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\ArrayType',
+        'boolean'   => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\BooleanType',
+        'date'      => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\DateType',
+        'float'     => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\FloatType',
+        'integer'   => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\IntegerType',
+        'mixed'     => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\MixedType',
+        'object'    => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\ObjectType',
+        'string'    => 'Zarathustra\Modlr\RestOdm\DataTypes\Types\StringType',
     ];
 
     /**

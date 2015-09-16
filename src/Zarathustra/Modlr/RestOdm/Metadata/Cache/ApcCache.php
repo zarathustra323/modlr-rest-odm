@@ -1,9 +1,9 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Cache;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Cache;
 
 use Redis;
-use Zarathustra\ModlrData\Metadata\EntityMetadata;
+use Zarathustra\Modlr\RestOdm\Metadata\EntityMetadata;
 
 /**
  * Caches and retrieves EntityMetadata objects from APC.

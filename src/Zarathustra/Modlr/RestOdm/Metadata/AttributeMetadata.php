@@ -1,6 +1,6 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata;
+namespace Zarathustra\Modlr\RestOdm\Metadata;
 
 /**
  * Defines metadata for a "standard" field.

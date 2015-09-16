@@ -1,6 +1,6 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Driver;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Driver;
 
 /**
  * Interface for locating metadata mapping files for generating EntityMetadata classes.

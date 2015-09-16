@@ -1,8 +1,8 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Driver;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Driver;
 
-use Zarathustra\ModlrData\Metadata\EntityMetadata;
+use Zarathustra\Modlr\RestOdm\Metadata\EntityMetadata;
 
 /**
  * Abstract metadata file driver.

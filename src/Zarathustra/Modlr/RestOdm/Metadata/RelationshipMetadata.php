@@ -1,8 +1,8 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata;
+namespace Zarathustra\Modlr\RestOdm\Metadata;
 
-use Zarathustra\ModlrData\Exception\MetadataException;
+use Zarathustra\Modlr\RestOdm\Exception\MetadataException;
 
 /**
  * Defines metadata for a relationship field.

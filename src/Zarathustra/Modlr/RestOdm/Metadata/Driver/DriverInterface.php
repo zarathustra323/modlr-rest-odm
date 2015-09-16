@@ -1,6 +1,6 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Driver;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Driver;
 
 /**
  * Interface for metadata driver implementations.
@@ -13,7 +13,7 @@ interface DriverInterface
      * Loads the EntityMetadata for a type.
      *
      * @param   string  $type
-     * @return  \Zarathustra\ModlrData\Metadata\EntityMetadata|null
+     * @return  \Zarathustra\Modlr\RestOdm\Metadata\EntityMetadata|null
      */
     public function loadMetadataForType($type);
 

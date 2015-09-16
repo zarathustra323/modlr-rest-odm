@@ -1,8 +1,8 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Cache;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Cache;
 
-use Zarathustra\ModlrData\Metadata\MetadataFactory;
+use Zarathustra\Modlr\RestOdm\Metadata\MetadataFactory;
 
 /**
  * Warms up the metadata cache objects by placing all known entities into the cache source.

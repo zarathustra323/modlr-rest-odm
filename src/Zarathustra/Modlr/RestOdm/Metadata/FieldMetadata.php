@@ -1,8 +1,8 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata;
+namespace Zarathustra\Modlr\RestOdm\Metadata;
 
-use Zarathustra\ModlrData\Exception\MetadataException;
+use Zarathustra\Modlr\RestOdm\Exception\MetadataException;
 
 /**
  * Abstract field metadata class used for all Entity fields (attributes and relationships).

@@ -1,10 +1,10 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Driver;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Driver;
 
-use Zarathustra\ModlrData\Metadata;
-use Zarathustra\ModlrData\Exception\InvalidArgumentException;
-use Zarathustra\ModlrData\Exception\RuntimeException;
+use Zarathustra\Modlr\RestOdm\Metadata;
+use Zarathustra\Modlr\RestOdm\Exception\InvalidArgumentException;
+use Zarathustra\Modlr\RestOdm\Exception\RuntimeException;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use Doctrine\ODM\MongoDB\Mapping\ClassMetadataInfo;
 

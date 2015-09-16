@@ -1,9 +1,9 @@
 <?php
 
-namespace Zarathustra\ModlrData\Metadata\Driver;
+namespace Zarathustra\Modlr\RestOdm\Metadata\Driver;
 
-use Zarathustra\ModlrData\Metadata;
-use Zarathustra\ModlrData\Exception\RuntimeException;
+use Zarathustra\Modlr\RestOdm\Metadata;
+use Zarathustra\Modlr\RestOdm\Exception\RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 
 /**
