@@ -1,3 +1,4 @@
-# odm-rest
+# modlr-rest-odm
 
-Simplified PHP Framework using Symfony Components for RESTful representation of a Mongo DBA layer.
+Simplified PHP library for fast and efficient RESTful API for MongoDB.
+Designed for use with front end web frameworks such as EmberJS.
