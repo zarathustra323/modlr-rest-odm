@@ -39,7 +39,6 @@ class JsonApiSerializer implements SerializerInterface
     /**
      * Constructor.
      *
-     * @param   MetadataFactory $mf
      * @param   TypeFactory     $typeFactory
      */
     public function __construct(TypeFactory $typeFactory)
@@ -68,6 +67,14 @@ class JsonApiSerializer implements SerializerInterface
         return (0 === $this->depth) ? $this->encode($serialized) : $serialized;
     }
 
+    /**
+     * Serializes a dataset into the appropriate format.
+     *
+     * @param   mixed               $data
+     * @param   AdapterInterface    $adapter
+     * @return  array
+     * @throws  RuntimeException
+     */
     protected function serializeData($data, AdapterInterface $adapter)
     {
         if ($data instanceof Struct\Entity) {
@@ -96,6 +103,9 @@ class JsonApiSerializer implements SerializerInterface
         return $serialized;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function serializeIdentifier(Struct\Identifier $identifier, AdapterInterface $adapter)
     {
         $serialized = [
@@ -140,8 +150,8 @@ class JsonApiSerializer implements SerializerInterface
     /**
      * Serializes an attribute value.
      *
-     * @param   Attribute|null      $attribute
-     * @param   AttributeMetadata   $attrMeta
+     * @param   Struct\Attribute|null   $attribute
+     * @param   AttributeMetadata       $attrMeta
      * @return  mixed
      */
     protected function serializeAttribute(Struct\Attribute $attribute = null, AttributeMetadata $attrMeta)
@@ -172,9 +182,10 @@ class JsonApiSerializer implements SerializerInterface
      *
      * @todo    Need support for meta.
      *
-     * @param   Resource                $owner
-     * @param   Relationship|null       $relationship
-     * @param   RelationshipMetadata    $relMeta
+     * @param   Struct\Entity               $owner
+     * @param   Struct\Relationship|null    $relationship
+     * @param   RelationshipMetadata        $relMeta
+     * @param   AdapterInterface            $adapter
      * @return  array
      */
     protected function serializeRelationship(Struct\Entity $owner, Struct\Relationship $relationship = null, RelationshipMetadata $relMeta, AdapterInterface $adapter)
@@ -197,12 +208,16 @@ class JsonApiSerializer implements SerializerInterface
         return $serialized;
     }
 
+    /**
+     * Encodes the formatted payload array.
+     *
+     * @param   array   $payload
+     * @return  string
+     */
     private function encode(array $payload)
     {
         return json_encode($payload);
     }
-
-
 
     /**
      * {@inheritDoc}
