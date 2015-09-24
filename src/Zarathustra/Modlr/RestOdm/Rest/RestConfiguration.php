@@ -122,6 +122,6 @@ class RestConfiguration
      */
     public function getDefaultSorting()
     {
-        return ['id' => 1];
+        return ['id' => -1];
     }
 }
