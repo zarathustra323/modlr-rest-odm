@@ -112,7 +112,6 @@ class MetadataFactory implements MetadataFactoryInterface
      */
     public function getMetadataForType($type)
     {
-        $type = $this->formatEntityType($type);
         if (null !== $metadata = $this->doLoadMetadata($type)) {
             // Found in memory or from cache implementation
             return $metadata;
@@ -120,7 +119,6 @@ class MetadataFactory implements MetadataFactoryInterface
 
         // Loop through the type hierarchy (extension) and merge metadata objects.
         foreach ($this->driver->getTypeHierarchy($type) as $hierType) {
-            $hierType = $this->formatEntityType($hierType);
 
             if (null !== $loaded = $this->doLoadMetadata($hierType)) {
                 // Found in memory or from cache implementation

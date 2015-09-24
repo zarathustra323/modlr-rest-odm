@@ -11,7 +11,7 @@ class MetadataException extends \Exception implements ExceptionInterface
 {
     public static function mappingNotFound($entityType)
     {
-        return new self(sprintf('Unable to locate metadata mapping information for Entity type "%s"', $entityType));
+        return new self(sprintf('Unable to locate metadata mapping information for Entity type "%s"', $entityType), 100);
     }
 
     public static function invalidEntityType($entityType)

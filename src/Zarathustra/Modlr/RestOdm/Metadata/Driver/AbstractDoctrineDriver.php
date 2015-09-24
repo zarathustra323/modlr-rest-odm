@@ -2,6 +2,7 @@
 
 namespace Zarathustra\Modlr\RestOdm\Metadata\Driver;
 
+use Zarathustra\Modlr\RestOdm\Metadata\Config\DoctrineConfig;
 use Doctrine\Common\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Common\Persistence\Mapping\MappingException;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
@@ -22,14 +23,6 @@ abstract class AbstractDoctrineDriver implements DriverInterface
     protected $mf;
 
     /**
-     * Root namespace that all Doctrine class names share.
-     * Is used to convert class names to entity types, and vice versa.
-     *
-     * @param string|null
-     */
-    protected $rootNamespace;
-
-    /**
      * Array cache of all entity types.
      *
      * @var null|array
@@ -37,14 +30,22 @@ abstract class AbstractDoctrineDriver implements DriverInterface
     protected $allEntityTypes;
 
     /**
+     * Doctrine metadata configuration.
+     *
+     * @var DoctrineConfig
+     */
+    protected $config;
+
+    /**
      * Constructor.
      *
      * @param   ClassMetadataFactory    $mf
+     * @param   DoctrineConfig          $config
      */
-    public function __construct(ClassMetadataFactory $mf, $rootNamespace = null)
+    public function __construct(ClassMetadataFactory $mf, DoctrineConfig $config)
     {
         $this->mf = $mf;
-        $this->rootNamespace = $rootNamespace;
+        $this->config = $config;
     }
 
     /**
@@ -141,15 +142,7 @@ abstract class AbstractDoctrineDriver implements DriverInterface
      */
     protected function getTypeForClassName($className)
     {
-        if (empty($this->rootNamespace)) {
-            return $className;
-        }
-        return $this->stripNamespace($this->rootNamespace, $className);
-    }
-
-    protected function stripNamespace($namespace, $toStrip)
-    {
-        return trim(str_replace($namespace, '', $toStrip), '\\');
+        return $this->config->getTypeForClassName($className);
     }
 
     /**
@@ -160,12 +153,6 @@ abstract class AbstractDoctrineDriver implements DriverInterface
      */
     protected function getClassNameForType($type)
     {
-        if (!empty($this->rootNamespace) && strstr($type, $this->rootNamespace)) {
-            $type = $this->stripNamespace($this->rootNamespace, $type);
-        }
-        if (!empty($this->rootNamespace)) {
-            return sprintf('%s\\%s', $this->rootNamespace, $type);
-        }
-        return $type;
+        return $this->config->getClassNameForType($type);
     }
 }
