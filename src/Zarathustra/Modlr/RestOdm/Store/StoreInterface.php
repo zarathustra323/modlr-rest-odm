@@ -23,4 +23,16 @@ interface StoreInterface
      * @return  Struct\Resource
      */
     public function findRecord(EntityMetadata $metadata, $identifier, array $fields = [], array $inclusions = []);
+
+    /**
+     * Finds multiple entities by type.
+     *
+     * @param   EntityMetadata  $type
+     * @param   array           $pagination
+     * @param   array           $fields
+     * @param   array           $inclusions
+     * @param   array           $sorts
+     * @return  Struct\Resource
+     */
+    public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = []);
 }
