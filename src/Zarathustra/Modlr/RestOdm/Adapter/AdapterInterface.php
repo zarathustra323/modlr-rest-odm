@@ -2,19 +2,21 @@
 
 namespace Zarathustra\Modlr\RestOdm\Adapter;
 
+use Zarathustra\Modlr\RestOdm\Store\StoreInterface;
+use Zarathustra\Modlr\RestOdm\Serializer\SerializerInterface;
 use Zarathustra\Modlr\RestOdm\Metadata\EntityMetadata;
 use Zarathustra\Modlr\RestOdm\Rest;
 use Zarathustra\Modlr\RestOdm\Struct;
 
 /**
- * Interface for handling API operations
+ * Interface for handling API operations.
  *
  * @author Jacob Bare <jbare@southcomm.com>
  */
 interface AdapterInterface
 {
     /**
-     * Processes REST requests and formats them into REST responses.
+     * Processes a REST request and formats them into REST responses.
      *
      * @param   Rest\RestRequest     $request
      * @return  Rest\RestResponse
@@ -32,20 +34,69 @@ interface AdapterInterface
      */
     public function findRecord(EntityMetadata $metadata, $identifier, array $fields = [], array $inclusions = []);
 
+    /**
+     * Handles errors and returns an appropriate REST response.
+     *
+     * @param   \Exception  $e
+     * @return  Rest\RestResponse
+     */
     public function handleException(\Exception $e);
 
+    /**
+     * Gets the internal Modlr entity type, based on this adapter's external type.
+     *
+     * @param   string  $externalType
+     * @return  string
+     */
     public function getInternalEntityType($externalType);
 
+    /**
+     * Gets the external adapter entity type, based on the internal Modlr type.
+     *
+     * @param   string  $internalType
+     * @return  string
+     */
     public function getExternalEntityType($internalType);
 
+    /**
+     * Gets the external adapter field key, based on the internal Modlr field key.
+     *
+     * @param   string  $internalKey
+     * @return  string
+     */
     public function getExternalFieldKey($internalKey);
 
+    /**
+     * Gets the Store for handling persistence operations.
+     *
+     * @return  StoreInterface
+     */
     public function getStore();
 
+    /**
+     * Gets the Serializer for serializing and normalizing REST payloads.
+     *
+     * @return  SerializerInterface
+     */
     public function getSerializer();
 
+    /**
+     * Gets entity metadata, based on entity type.
+     *
+     * @param   string  $type
+     * @return  EntityMetadata
+     */
     public function getEntityMetadata($type);
 
+    /**
+     * Builds a URL for an entity, or an entity relationship.
+     *
+     * @param   EntityMetadata  $metadata
+     * @param   string          $identifier
+     * @param   string|null     $externalRelKey
+     * @param   bool            $isRelatedLink
+     * @return  string
+     */
     public function buildUrl(EntityMetadata $metadata, $identifier, $externalRelKey = null, $isRelatedLink = false);
 
     /**
