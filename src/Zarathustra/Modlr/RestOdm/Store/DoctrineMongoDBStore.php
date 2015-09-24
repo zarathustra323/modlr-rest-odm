@@ -6,6 +6,7 @@ use Zarathustra\Modlr\RestOdm\Rest;
 use Zarathustra\Modlr\RestOdm\Struct;
 use Zarathustra\Modlr\RestOdm\Metadata\MetadataFactory;
 use Zarathustra\Modlr\RestOdm\Metadata\EntityMetadata;
+use Zarathustra\Modlr\RestOdm\Metadata\RelationshipMetadata;
 use Zarathustra\Modlr\RestOdm\Metadata\Config\DoctrineConfig;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Zarathustra\Modlr\RestOdm\Exception\RuntimeException;
@@ -67,11 +68,28 @@ class DoctrineMongoDBStore implements StoreInterface
     public function findRecord(EntityMetadata $metadata, $identifier, array $fields = [], array $inclusions = [])
     {
         $className = $this->config->getClassNameForType($metadata->type);
-        $result = $this->doctrineQueryRaw($className, ['id' => $identifier])->getSingleResult();
+        $result = $this->doctrineQueryRaw($className, ['id' => $identifier], $fields)->getSingleResult();
         if (null === $result) {
             throw StoreException::recordNotFound($metadata->type, $identifier);
         }
         return $this->hydrateOne($metadata, $identifier, $result);
+    }
+
+    public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
+    {
+        $className = $this->config->getClassNameForType($metadata->type);
+        $cursor = $this->doctrineQueryRaw($className, [], $fields, $sort)->limit($pagination['limit'])->skip($pagination['offset']);
+        return $this->hydrateMany($metadata, $cursor->toArray());
+    }
+
+    protected function hydrateMany(EntityMetadata $metadata, array $items)
+    {
+        $resource = $this->sf->createResource($metadata->type, 'many');
+        foreach ($items as $identifier => $data) {
+            $entity = $this->hydrateEntity($metadata, $identifier, $data);
+            $this->sf->applyEntity($resource, $entity);
+        }
+        return $resource;
     }
 
     /**
@@ -85,9 +103,15 @@ class DoctrineMongoDBStore implements StoreInterface
     protected function hydrateOne(EntityMetadata $metadata, $identifier, array $data)
     {
         $resource = $this->sf->createResource($metadata->type, 'one');
-        $entity = $this->sf->createEntity($metadata->type, $identifier);
-
+        $entity = $this->hydrateEntity($metadata, $identifier, $data);
         $this->sf->applyEntity($resource, $entity);
+        return $resource;
+    }
+
+    protected function hydrateEntity(EntityMetadata $metadata, $identifier, array $data)
+    {
+        $metadata = $this->extractPolymorphicMetadata($metadata, $data);
+        $entity = $this->sf->createEntity($metadata->type, $identifier);
         $this->sf->applyAttributes($entity, $data);
 
         $doctrineMeta = $this->getClassMetadata($metadata->type);
@@ -100,38 +124,63 @@ class DoctrineMongoDBStore implements StoreInterface
                 continue;
             }
 
-            $relEntityMeta = $this->mf->getMetadataForType($relMeta->getEntityType());
-            $relDoctrineMeta = $this->getClassMetadata($relMeta->getEntityType());
-
             $fieldMapping = $doctrineMeta->getFieldMapping($key);
             $references = $relMeta->isOne() ? [$data[$key]] : $data[$key];
 
             $relationship = $this->sf->createRelationship($entity, $key);
-
             foreach ($references as $reference) {
-                if (true === $fieldMapping['simple']) {
-                    $referenceId = $reference;
-                } elseif (is_array($reference) && isset($reference['$id'])) {
-                    $referenceId = $reference['$id'];
-                } else {
-                    continue;
-                }
-
-                if (true === $relEntityMeta->isPolymorphic()) {
-                    $discriminator = $relDoctrineMeta->discriminatorField;
-                    $map = $relDoctrineMeta->discriminatorMap;
-
-                    if (!isset($discriminator) || !is_array($reference) || !isset($reference[$discriminator]) || !isset($map[$reference[$discriminator]])) {
-                        throw new RuntimeException('Unable to extract polymorphic type.');
-                    }
-                    $referenceType = $this->config->getTypeForClassName($map[$reference[$discriminator]]);
-                } else {
-                    $referenceType = $relEntityMeta->type;
-                }
+                list($referenceId, $referenceType) = $this->extractReference($relMeta, $reference, $fieldMapping['simple']);
                 $this->sf->applyRelationship($entity, $relationship, new Struct\Identifier($referenceId, $referenceType));
             }
         }
-        return $resource;
+        return $entity;
+    }
+
+    protected function extractReference(RelationshipMetadata $relMeta, $reference, $simple)
+    {
+        $simple = (Boolean) $simple;
+        $relEntityMeta = $this->mf->getMetadataForType($relMeta->getEntityType());
+        $doctrineMeta = $this->getClassMetadata($relEntityMeta->type);
+
+        if (true === $simple && is_array($reference) && isset($reference['$id'])) {
+            $referenceId = $reference['$id'];
+        } elseif (true === $simple && !is_array($reference)) {
+            $referenceId = $reference;
+        } elseif (false === $simple && is_array($reference) && isset($reference['$id'])) {
+            $referenceId = $reference['$id'];
+        } else {
+            throw new RuntimeException('Unable to extract a reference id.');
+        }
+
+        $extracted = $this->extractPolymorphicMetadata($relEntityMeta, $reference);
+        return [$referenceId, $extracted->type];
+    }
+
+    protected function extractPolymorphicMetadata(EntityMetadata $metadata, $data)
+    {
+        if (false === $metadata->isPolymorphic()) {
+            return $metadata;
+        }
+
+        if (!is_array($data)) {
+            throw new RuntimeException('Unable to extract polymorphic type');
+        }
+
+        $discrim = $this->getDoctrineDiscriminator($metadata->type);
+        if (!isset($discrim['field']) || !isset($data[$discrim['field']]) || !isset($discrim['map'][$data[$discrim['field']]])) {
+            throw new RuntimeException('Unable to extract polymorphic type.');
+        }
+        $type = $this->config->getTypeForClassName($discrim['map'][$data[$discrim['field']]]);
+        return $this->mf->getMetadataForType($type);
+    }
+
+    protected function getDoctrineDiscriminator($entityType)
+    {
+        $doctrineMeta = $this->getClassMetadata($entityType);
+        return [
+            'field' => $doctrineMeta->discriminatorField,
+            'map'   => $doctrineMeta->discriminatorMap,
+        ];
     }
 
     /**
@@ -152,14 +201,19 @@ class DoctrineMongoDBStore implements StoreInterface
      * @param   string  $className
      * @param   array   $criteria
      */
-    protected function doctrineQuery($className, array $criteria)
+    protected function doctrineQuery($className, array $criteria, array $fields = [], array $sort = [])
     {
-        $qb = $this->dm->createQueryBuilder($className);
-
-        $qb
+        $qb = $this->dm->createQueryBuilder($className)
             ->find()
             ->setQueryArray($criteria)
         ;
+
+        $qb->select($fields);
+
+        if (!empty($sort)) {
+            $qb->sort($sort);
+        }
+
         return $qb->getQuery()->execute();
     }
 
@@ -169,7 +223,7 @@ class DoctrineMongoDBStore implements StoreInterface
      * @param   string  $className
      * @param   array   $criteria
      */
-    protected function doctrineQueryRaw($className, array $criteria)
+    protected function doctrineQueryRaw($className, array $criteria, array $fields = [], array $sort = [])
     {
         return $this->doctrineQuery($className, $criteria)->getBaseCursor();
     }

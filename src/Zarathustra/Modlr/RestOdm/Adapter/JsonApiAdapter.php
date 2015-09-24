@@ -94,8 +94,12 @@ class JsonApiAdapter implements AdapterInterface
         $metadata = $this->getEntityMetadata($internalType);
         switch ($request->getMethod()) {
             case 'GET':
-                if (true === $request->hasIdentifier() && false === $request->isRelationship() && false === $request->hasFilters()) {
-                    return $this->findRecord($metadata, $request->getIdentifier(), $request->getFieldset(), $request->getInclusions());
+                if (true === $request->hasIdentifier()) {
+                    if (false === $request->isRelationship() && false === $request->hasFilters()) {
+                        return $this->findRecord($metadata, $request->getIdentifier(), $request->getFieldset(), $request->getInclusions());
+                    }
+                } else {
+                    return $this->findMany($metadata, $request->getPagination(), $request->getFieldset(), $request->getInclusions(), $request->getSorting());
                 }
                 break;
             case 'POST':
@@ -118,8 +122,13 @@ class JsonApiAdapter implements AdapterInterface
     public function findRecord(EntityMetadata $metadata, $identifier, array $fields = [], array $inclusions = [])
     {
         $resource = $this->getStore()->findRecord($metadata, $identifier, $fields, $inclusions);
-        var_dump($resource);
-        die();
+        $payload = $this->serialize($resource);
+        return $this->createRestResponse(200, $payload);
+    }
+
+    public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
+    {
+        $resource = $this->getStore()->findMany($metadata, $pagination, $fields, $inclusions, $sort);
         $payload = $this->serialize($resource);
         return $this->createRestResponse(200, $payload);
     }

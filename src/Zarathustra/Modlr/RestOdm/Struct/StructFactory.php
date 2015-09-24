@@ -78,26 +78,13 @@ class StructFactory
     }
 
     /**
-     * Applies an array or array-like set of relationship data to an entity.
-     * Each array member must be a EntityInterface object keyed by the relationship field key.
+     * Applies a Relationship structure object to the owning Entity structure.
      *
-     * @param   Entity              $owner      The owning entity.
-     * @param   array|\ArrayAccess  $data       The resource data to apply.
+     * @param   Entity          $owner
+     * @param   Relationship    $relationship
+     * @param   EntityInterface $related
      * @return  self
      */
-    // public function applyRelationships(Entity $owner, $data)
-    // {
-    //     $this->validateData($data);
-    //     $meta = $this->mf->getMetadataForType($owner->getType());
-    //     foreach ($meta->getRelationships() as $key => $relationship) {
-    //         if (!isset($data[$key]) || !$data[$key] instanceof EntityInterface) {
-    //             continue;
-    //         }
-    //         $this->applyRelationship($owner, $key, $data[$key]);
-    //     }
-    //     return $this;
-    // }
-
     public function applyRelationship(Entity $owner, Relationship $relationship, EntityInterface $related)
     {
         $this->validateRelationshipOwner($owner->getType(), $relationship->getKey());
@@ -107,6 +94,13 @@ class StructFactory
         return $this;
     }
 
+    /**
+     * Creates a new Relationship structure for an owning entity and relationship field key.
+     *
+     * @param   Entity  $owner
+     * @param   string  $fieldKey
+     * @return  Relationship
+     */
     public function createRelationship(Entity $owner, $fieldKey)
     {
         $this->validateRelationshipOwner($owner->getType(), $fieldKey);
