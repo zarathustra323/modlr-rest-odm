@@ -2,56 +2,120 @@
 
 namespace Zarathustra\Modlr\RestOdm\Rest;
 
-use Zarathustra\Modlr\RestOdm\Exception\InvalidArgumentException;
-
 /**
- * Primary REST request object.
+ * The REST Request object.
  * Is created/parsed from a core Request object.
  *
- * @todo   Ensure thrown exceptions are API response friendly.
  * @author Jacob Bare <jbare@southcomm.com>
  */
 class RestRequest
 {
+    /**
+     * Request parameter (query string) constants.
+     */
     const PARAM_INCLUSIONS = 'include';
     const PARAM_FIELDSETS  = 'fields';
     const PARAM_SORTING    = 'sort';
     const PARAM_PAGINATION = 'page';
     const PARAM_FILTERING  = 'filter';
 
+    /**
+     * The request method, such as GET, POST, PATCH, etc.
+     *
+     * @var string
+     */
     private $requestMethod;
 
-    private $parsedUri;
+    /**
+     * The parsed URL/URI, via PHP's parse_url().
+     *
+     * @var array
+     */
+    private $parsedUri = [];
 
+    /**
+     * The entity type requested.
+     *
+     * @var string
+     */
     private $entityType;
 
+    /**
+     * The entity identifier (id) value, if sent.
+     *
+     * @var string|null
+     */
     private $identifier;
 
+    /**
+     * The entity relationship properties, if sent.
+     *
+     * @var array
+     */
     private $relationship = [];
 
+    /**
+     * Relationship fields to include with the response.
+     * AKA: sideloading the entities of relationships.
+     *
+     * @var array
+     */
     private $inclusions = [];
 
+    /**
+     * Sorting criteria.
+     *
+     * @var array
+     */
     private $sorting = [];
 
+    /**
+     * Fields to only include with the response.
+     *
+     * @var array
+     */
     private $fields = [];
 
+    /**
+     * Pagination (limit/skip) criteria.
+     *
+     * @var array
+     */
     private $pagination = [
         'offset'    => 0,
         'limit'     => 50,
     ];
 
+    /**
+     * Any request filters, such as quering, search, autocomplete, etc.
+     * Must ultimately be handled by the Adapter to function.
+     *
+     * @var array
+     */
     private $filters = [];
 
+    /**
+     * The request payload, if sent.
+     * Used for updating/creating entities.
+     *
+     * @var RestPayload|null
+     */
     private $payload;
 
+    /**
+     * The REST configuration.
+     *
+     * @var RestConfiguration
+     */
     private $config;
 
     /**
      * Constructor.
      *
-     * @param   string      $method     The request method.
-     * @param   string      $uri        The complete URI (URL) of the request, included scheme, host, path, and query string.
-     * @param   string|null $payload    The request payload (body).
+     * @param   RestConfiguration   $config     The REST configuration.
+     * @param   string              $method     The request method.
+     * @param   string              $uri        The complete URI (URL) of the request, included scheme, host, path, and query string.
+     * @param   string|null         $payload    The request payload (body).
      */
     public function __construct(RestConfiguration $config, $method, $uri, $payload = null)
     {
@@ -60,99 +124,192 @@ class RestRequest
         $this->parse($uri);
         $this->payload = empty($payload) ? null : new RestPayload($payload);
 
+        // Re-configure the config based on the actually request.
         $this->config->setHost($this->getHost());
         $this->config->setScheme($this->getScheme());
     }
 
+    /**
+     * Gets the scheme, such as http or https.
+     *
+     * @return  string
+     */
     public function getScheme()
     {
         return $this->parsedUri['scheme'];
     }
 
+    /**
+     * Gets the hostname.
+     *
+     * @return  string
+     */
     public function getHost()
     {
         return $this->parsedUri['host'];
     }
 
+    /**
+     * Gets the request method, such as GET, POST, PATCH, etc.
+     *
+     * @return  string
+     */
     public function getMethod()
     {
         return $this->requestMethod;
     }
 
+    /**
+     * Gets the requested entity type.
+     *
+     * @return  string
+     */
     public function getEntityType()
     {
         return $this->entityType;
     }
 
+    /**
+     * Gets the requested entity identifier (id), if sent.
+     *
+     * @return  string|null
+     */
     public function getIdentifier()
     {
         return $this->identifier;
     }
 
+    /**
+     * Determines if an entity identifier (id) was sent with the request.
+     *
+     * @return  bool
+     */
     public function hasIdentifier()
     {
         return null !== $this->getIdentifier();
     }
 
+    /**
+     * Determines if this is an entity relationship request.
+     *
+     * @return  bool
+     */
     public function isRelationship()
     {
         return !empty($this->relationship);
     }
 
+    /**
+     * Determines if specific sideloaded include fields were requested.
+     *
+     * @return  bool
+     */
     public function hasInclusions()
     {
         $value = $this->getInclusions();
         return !empty($value);
     }
 
+    /**
+     * Gets specific sideloaded relationship fields to include.
+     *
+     * @return  array
+     */
     public function getInclusions()
     {
         return $this->inclusions;
     }
 
+    /**
+     * Determines if a specific return fieldset has been specified.
+     *
+     * @return  bool
+     */
     public function hasFieldset()
     {
         $value = $this->getFieldset();
         return !empty($value);
     }
 
+    /**
+     * Gets the return fieldset to use.
+     *
+     * @return  array
+     */
     public function getFieldset()
     {
         return $this->fields;
     }
 
+    /**
+     * Determines if the request has specified sorting criteria.
+     *
+     * @return  bool
+     */
     public function hasSorting()
     {
         $value = $this->getSorting();
         return !empty($value);
     }
 
+    /**
+     * Gets the sorting criteria.
+     *
+     * @return  array
+     */
     public function getSorting()
     {
         return $this->sorting;
     }
 
+    /**
+     * Determines if the request has specified pagination (limit/skip) criteria.
+     *
+     * @return  bool
+     */
     public function hasPagination()
     {
         $value = $this->getPagination();
         return !empty($value);
     }
 
+    /**
+     * Gets the pagination (limit/skip) criteria.
+     *
+     * @return  array
+     */
     public function getPagination()
     {
         return $this->pagination;
     }
 
+    /**
+     * Determines if the request has any filtering criteria.
+     *
+     * @return  bool
+     */
     public function hasFilters()
     {
         return !empty($this->filters);
     }
 
+    /**
+     * Determines if a specific filter exists, by key
+     *
+     * @param   string  $key
+     * @return  bool
+     */
     public function hasFilter($key)
     {
         return null !== $this->getFilter($key);
     }
 
+    /**
+     * Gets a specific filter, by key.
+     *
+     * @param   string  $key
+     * @return  mixed|null
+     */
     public function getFilter($key)
     {
         if (!isset($this->filters[$key])) {
@@ -161,16 +318,33 @@ class RestRequest
         return $this->filters[$key];
     }
 
+    /**
+     * Gets the request payload.
+     *
+     * @return  RestPayload|null
+     */
     public function getPayload()
     {
         return $this->payload;
     }
 
+    /**
+     * Determines if a request payload is present.
+     *
+     * @return  bool
+     */
     public function hasPayload()
     {
         return $this->getPayload() instanceof RestPayload;
     }
 
+    /**
+     * Parses the incoming request URI/URL and sets the appropriate properties on this RestRequest object.
+     *
+     * @param   string  $uri
+     * @return  self
+     * @throws  RestException
+     */
     private function parse($uri)
     {
         $this->parsedUri = parse_url($uri);
@@ -188,6 +362,13 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Parses the incoming request path and sets appropriate properties on this RestRequest object.
+     *
+     * @param   string  $path
+     * @return  self
+     * @throws  RestException
+     */
     private function parsePath($path)
     {
         $parts = explode('/', trim($path, '/'));
@@ -200,14 +381,27 @@ class RestRequest
         $this->extractEntityType($parts);
         $this->extractIdentifier($parts);
         $this->extractRelationship($parts);
+        return $this;
     }
 
+    /**
+     * Extracts the entity type from an array of path parts.
+     *
+     * @param   array   $parts
+     * @return  self
+     */
     private function extractEntityType(array $parts)
     {
         $this->entityType = $parts[0];
         return $this;
     }
 
+    /**
+     * Extracts the entity identifier (id) from an array of path parts.
+     *
+     * @param   array   $parts
+     * @return  self
+     */
     private function extractIdentifier(array $parts)
     {
         if (isset($parts[1])) {
@@ -216,6 +410,12 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Extracts the entity relationship properties from an array of path parts.
+     *
+     * @param   array   $parts
+     * @return  self
+     */
     private function extractRelationship(array $parts)
     {
         if (isset($parts[2])) {
@@ -237,6 +437,13 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Parses the incoming request query string and sets appropriate properties on this RestRequest object.
+     *
+     * @param   string  $queryString
+     * @return  self
+     * @throws  RestException
+     */
     private function parseQueryString($queryString)
     {
         parse_str($queryString, $parsed);
@@ -253,10 +460,15 @@ class RestRequest
         $this->extractFields($parsed);
         $this->extractPagination($parsed);
         $this->extractFilters($parsed);
-
         return $this;
     }
 
+    /**
+     * Extracts relationship inclusions from an array of query params.
+     *
+     * @param   array   $params
+     * @return  self
+     */
     private function extractInclusions(array $params)
     {
         if (false === $this->issetNotEmpty(self::PARAM_INCLUSIONS, $params)) {
@@ -266,6 +478,12 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Extracts sorting criteria from an array of query params.
+     *
+     * @param   array   $params
+     * @return  self
+     */
     private function extractSorting(array $params)
     {
         if (false === $this->issetNotEmpty(self::PARAM_SORTING, $params)) {
@@ -283,6 +501,12 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Extracts fields to return from an array of query params.
+     *
+     * @param   array   $params
+     * @return  self
+     */
     private function extractFields(array $params)
     {
         if (false === $this->issetNotEmpty(self::PARAM_FIELDSETS, $params)) {
@@ -298,6 +522,12 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Extracts pagination criteria from an array of query params.
+     *
+     * @param   array   $params
+     * @return  self
+     */
     private function extractPagination(array $params)
     {
         if (false === $this->issetNotEmpty(self::PARAM_PAGINATION, $params)) {
@@ -314,6 +544,12 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Extracts filtering criteria from an array of query params.
+     *
+     * @param   array   $params
+     * @return  self
+     */
     private function extractFilters(array $params)
     {
         if (false === $this->issetNotEmpty(self::PARAM_FILTERING, $params)) {
@@ -329,6 +565,11 @@ class RestRequest
         return $this;
     }
 
+    /**
+     * Gets query string parameters that this request supports.
+     *
+     * @return  array
+     */
     public function getSupportedParams()
     {
         return [
@@ -340,6 +581,13 @@ class RestRequest
         ];
     }
 
+    /**
+     * Helper that determines if a key and value is set and is not empty.
+     *
+     * @param   string  $key
+     * @param   mixed   $value
+     * @return  bool
+     */
     private function issetNotEmpty($key, $value)
     {
         return isset($value[$key]) && !empty($value[$key]);

@@ -5,7 +5,7 @@ namespace Zarathustra\Modlr\RestOdm\Rest;
 use Zarathustra\Modlr\RestOdm\Exception\AbstractHttpException;
 
 /**
- * Rest Request exceptions.
+ * REST Exceptions.
  *
  * @author Jacob Bare <jbare@southcomm.com>
  */
