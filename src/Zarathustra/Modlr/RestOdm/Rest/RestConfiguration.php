@@ -29,6 +29,13 @@ class RestConfiguration
     private $host;
 
     /**
+     * Whether all relationship fields should be included by default.
+     *
+     * @param   bool
+     */
+    private $includeAll = true;
+
+    /**
      * Gets the root API endpoint shared by all requests.
      *
      * @return  string
@@ -100,6 +107,16 @@ class RestConfiguration
     public function getHost()
     {
         return $this->host;
+    }
+
+    /**
+     * Whether all relationships should be included (side-loaded) by default.
+     *
+     * @param   bool
+     */
+    public function includeAllByDefault()
+    {
+        return $this->includeAll;
     }
 
     /**

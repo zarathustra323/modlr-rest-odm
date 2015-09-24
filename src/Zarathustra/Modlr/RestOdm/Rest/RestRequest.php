@@ -57,6 +57,8 @@ class RestRequest
     /**
      * Relationship fields to include with the response.
      * AKA: sideloading the entities of relationships.
+     * Either a associative array of relationshipKeys => true to specifically include.
+     * Or a single associative key of '*' => true if all should be included.
      *
      * @var array
      */
@@ -473,13 +475,17 @@ class RestRequest
     private function extractInclusions(array $params)
     {
         if (false === $this->issetNotEmpty(self::PARAM_INCLUSIONS, $params)) {
+            if (true === $this->config->includeAllByDefault()) {
+                $this->inclusions = ['*' => true];
+            }
             return $this;
         }
-        $this->inclusions = explode(',', $params[self::PARAM_INCLUSIONS]);
-        foreach ($this->inclusions as $inclusion) {
+        $inclusions = explode(',', $params[self::PARAM_INCLUSIONS]);
+        foreach ($inclusions as $inclusion) {
             if (false !== stristr($inclusion, '.')) {
                 throw RestException::invalidParamValue(self::PARAM_INCLUSIONS, sprintf('Inclusion via a relationship path, e.g. "%s" is currently not supported.', $inclusion));
             }
+            $this->inclusions[$inclusion] = true;
         }
         return $this;
     }
