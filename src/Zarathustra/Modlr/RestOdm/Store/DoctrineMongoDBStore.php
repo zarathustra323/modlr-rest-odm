@@ -17,14 +17,42 @@ use Zarathustra\Modlr\RestOdm\Exception\RuntimeException;
  */
 class DoctrineMongoDBStore implements StoreInterface
 {
+    /**
+     * Modlr MetadataFactory
+     *
+     * @var MetadataFactory.
+     */
     private $mf;
 
+    /**
+     * The Doctrine DocumentManager.
+     *
+     * @var DocumentManager
+     */
     private $dm;
 
+    /**
+     * The Doctrine-to-Modlr Metadata configuration.
+     *
+     * @var DoctrineConfig
+     */
     private $config;
 
+    /**
+     * The resource structure factory.
+     *
+     * @var Struct\StructFactory
+     */
     private $sf;
 
+    /**
+     * Constructor.
+     *
+     * @param   MetadataFactory         $mf
+     * @param   DocumentManager         $dm
+     * @param   DoctrineConfig          $config
+     * @param   Struct\StructFactory    $sf
+     */
     public function __construct(MetadataFactory $mf, DocumentManager $dm, DoctrineConfig $config, Struct\StructFactory $sf)
     {
         $this->mf = $mf;
@@ -106,6 +134,12 @@ class DoctrineMongoDBStore implements StoreInterface
         return $resource;
     }
 
+    /**
+     * Gets the Doctrine ClassMetadata object from an entity type.
+     *
+     * @param   string  $entityType
+     * @return  ClassMetadata
+     */
     protected function getClassMetadata($entityType)
     {
         $className = $this->config->getClassNameForType($entityType);
