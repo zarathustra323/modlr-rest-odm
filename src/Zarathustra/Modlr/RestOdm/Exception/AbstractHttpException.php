@@ -18,18 +18,35 @@ abstract class AbstractHttpException extends \Exception implements HttpException
     protected $httpCode;
 
     /**
+     * The HTTP error type: usually the Exception calling method.
+     *
+     * @param string
+     */
+    protected $errorType;
+
+    /**
      * Constructor.
      * Overwritten to require a message and an HTTP code.
      *
      * @param   string                          $message
      * @param   int                             $httpCode
+     * @param   string                          $errorType
      * @param   int                             $code
      * @param   HttpExceptionInterface|null     $previous
      */
-    public function __construct($message, $httpCode, $code = 0, HttpExceptionInterface $previous = null)
+    public function __construct($detail, $httpCode, $errorType, $code = 0, HttpExceptionInterface $previous = null)
     {
-        parent::__construct($message, $code, $previous);
+        parent::__construct($detail, $code, $previous);
         $this->httpCode = (Integer) $httpCode;
+        $this->errorType = $errorType;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getErrorType()
+    {
+        return $this->errorType;
     }
 
     /**

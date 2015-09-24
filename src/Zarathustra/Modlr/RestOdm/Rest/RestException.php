@@ -18,7 +18,8 @@ class RestException extends AbstractHttpException
                 'The provided path "%s" is not a valid API endpoint.',
                 $path
             ),
-            400
+            400,
+            __FUNCTION__
         );
     }
 
@@ -29,7 +30,8 @@ class RestException extends AbstractHttpException
                 'The provided path "%s" is not a valid relationship API endpoint.',
                 $path
             ),
-            400
+            400,
+            __FUNCTION__
         );
     }
 
@@ -41,7 +43,8 @@ class RestException extends AbstractHttpException
                 $type,
                 implode(', ', $supported)
             ),
-            400
+            400,
+            __FUNCTION__
         );
     }
 
@@ -53,7 +56,8 @@ class RestException extends AbstractHttpException
                 $param,
                 implode(', ', $supported)
             ),
-            400
+            400,
+            __FUNCTION__
         );
     }
 
@@ -65,7 +69,21 @@ class RestException extends AbstractHttpException
                 $param,
                 $message
             ),
-            400
+            400,
+            __FUNCTION__
+        );
+    }
+
+    public static function invalidParamValue($param, $message = null)
+    {
+        return new self(
+            sprintf(
+                'The query parameter "%s" is invalid. %s',
+                $param,
+                $message
+            ),
+            400,
+            __FUNCTION__
         );
     }
 
@@ -76,7 +94,8 @@ class RestException extends AbstractHttpException
                 'No REST adapter was found to handle "%s" requests.',
                 $requestType
             ),
-            400
+            400,
+            __FUNCTION__
         );
     }
 }

@@ -476,6 +476,11 @@ class RestRequest
             return $this;
         }
         $this->inclusions = explode(',', $params[self::PARAM_INCLUSIONS]);
+        foreach ($this->inclusions as $inclusion) {
+            if (false !== stristr($inclusion, '.')) {
+                throw RestException::invalidParamValue(self::PARAM_INCLUSIONS, sprintf('Inclusion via a relationship path, e.g. "%s" is currently not supported.', $inclusion));
+            }
+        }
         return $this;
     }
 

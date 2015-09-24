@@ -18,7 +18,7 @@ interface SerializerInterface
      *
      * @return  string
      */
-    public function serializeError($message, $httpCode);
+    public function serializeError($title, $detail, $httpCode);
 
     /**
      * Normalizes a RestPayload into a Struct\Resource.

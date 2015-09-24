@@ -222,11 +222,11 @@ class JsonApiSerializer implements SerializerInterface
     /**
      * {@inheritDoc}
      */
-    public function serializeError($message, $httpCode)
+    public function serializeError($title, $message, $httpCode)
     {
         return $this->encode([
             'errors'    => [
-                ['status' => (String) $httpCode, 'detail' => $message],
+                ['status' => (String) $httpCode, 'title' => $title, 'detail' => $message],
             ],
         ]);
     }

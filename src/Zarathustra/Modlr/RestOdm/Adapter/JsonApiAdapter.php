@@ -126,6 +126,9 @@ class JsonApiAdapter implements AdapterInterface
         return $this->createRestResponse(200, $payload);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
     {
         $resource = $this->getStore()->findMany($metadata, $pagination, $fields, $inclusions, $sort);
@@ -139,14 +142,17 @@ class JsonApiAdapter implements AdapterInterface
     public function handleException(\Exception $e)
     {
         if ($e instanceof HttpExceptionInterface) {
-            $message = $e->getMessage();
+            $refl = new \ReflectionClass($e);
+            $title  = sprintf('%s::%s', $refl->getShortName(), $e->getErrorType());
+            $detail = $e->getMessage();
             $status = $e->getHttpCode();
         } else {
-            $message = 'An internal server error occured';
+            $title  = 'Exception';
+            $detail = 'An internal server error occured';
             $status = 500;
         }
 
-        $serialized = $this->getSerializer()->serializeError($message, $status);
+        $serialized = $this->getSerializer()->serializeError($title, $detail, $status);
         $payload = new Rest\RestPayload($serialized);
         return $this->createRestResponse($status, $payload);
     }

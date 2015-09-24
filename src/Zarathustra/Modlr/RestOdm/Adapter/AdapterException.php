@@ -18,7 +18,8 @@ class AdapterException extends AbstractHttpException
                 'No API resource was found for entity type "%s"',
                 $type
             ),
-            404
+            404,
+            __FUNCTION__
         );
     }
 }

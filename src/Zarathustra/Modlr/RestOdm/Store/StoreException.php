@@ -19,7 +19,8 @@ class StoreException extends AbstractHttpException
                 $type,
                 $identifer
             ),
-            404
+            404,
+            __FUNCTION__
         );
     }
 }
