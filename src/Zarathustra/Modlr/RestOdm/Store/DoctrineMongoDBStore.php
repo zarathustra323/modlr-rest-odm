@@ -75,6 +75,9 @@ class DoctrineMongoDBStore implements StoreInterface
         return $this->hydrateOne($metadata, $identifier, $result);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
     {
         $className = $this->config->getClassNameForType($metadata->type);
@@ -225,6 +228,6 @@ class DoctrineMongoDBStore implements StoreInterface
      */
     protected function doctrineQueryRaw($className, array $criteria, array $fields = [], array $sort = [])
     {
-        return $this->doctrineQuery($className, $criteria)->getBaseCursor();
+        return $this->doctrineQuery($className, $criteria, $fields, $sort)->getBaseCursor();
     }
 }
