@@ -34,7 +34,7 @@ class ObjectType implements TypeInterface
     protected function extractObject($value)
     {
         if (empty($value)) {
-            return (Object) [];
+            return null;
         }
 
         if ($value instanceof \Traversable) {
