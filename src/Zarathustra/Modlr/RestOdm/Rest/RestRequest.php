@@ -81,10 +81,7 @@ class RestRequest
      *
      * @var array
      */
-    private $pagination = [
-        'offset'    => 0,
-        'limit'     => 50,
-    ];
+    private $pagination = [];
 
     /**
      * Any request filters, such as quering, search, autocomplete, etc.
@@ -121,6 +118,10 @@ class RestRequest
     {
         $this->config = $config;
         $this->requestMethod = strtoupper($method);
+
+        $this->sorting      = $config->getDefaultSorting();
+        $this->pagination   = $config->getDefaultPagination();
+
         $this->parse($uri);
         $this->payload = empty($payload) ? null : new RestPayload($payload);
 

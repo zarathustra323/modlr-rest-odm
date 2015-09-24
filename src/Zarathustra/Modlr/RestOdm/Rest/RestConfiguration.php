@@ -101,4 +101,27 @@ class RestConfiguration
     {
         return $this->host;
     }
+
+    /**
+     * Gets the default pagination criteria.
+     *
+     * @return  array
+     */
+    public function getDefaultPagination()
+    {
+        return [
+            'offset'    => 0,
+            'limit'     => 50,
+        ];
+    }
+
+    /**
+     * Gets the default sorting criteria.
+     *
+     * @return  array
+     */
+    public function getDefaultSorting()
+    {
+        return ['id' => 1];
+    }
 }
