@@ -28,6 +28,13 @@ class Resource
     protected $primaryData;
 
     /**
+     * The resource's included data.
+     *
+     * @var Collection|null
+     */
+    protected $includedData;
+
+    /**
      * Constructor.
      *
      * @param   string  $entityType
@@ -109,5 +116,38 @@ class Resource
     public function getPrimaryData()
     {
         return $this->primaryData;
+    }
+
+    /**
+     * Sets the included (side-loaded) data collection.
+     *
+     * @param   Collection  $included
+     * @return  self
+     */
+    public function setIncludedData(Collection $included)
+    {
+        $this->includedData = $included;
+        return $this;
+    }
+
+    /**
+     * Gets the included (side-loaded) data collection.
+     *
+     * @return  Collection
+     */
+    public function getIncludedData()
+    {
+        return $this->includedData;
+    }
+
+    /**
+     * Determines if included (side-loaded) data exists.
+     *
+     * @return  bool
+     */
+    public function hasIncludedData()
+    {
+        $included = $this->getIncludedData();
+        return null !== $included && count($included) > 0;
     }
 }

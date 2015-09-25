@@ -40,6 +40,16 @@ class StructFactory
     }
 
     /**
+     * Creates a new collection.
+     *
+     * @return  Collection
+     */
+    public function createCollection()
+    {
+        return new Collection();
+    }
+
+    /**
      * Creates a new entity.
      *
      * @param   string  $type   The entity type.
@@ -110,6 +120,14 @@ class StructFactory
 
     }
 
+    /**
+     * Vaidates that the owning entity has the provided relationship key.
+     *
+     * @param   string  $owningEntityType
+     * @param   string  $fieldKey
+     * @return  bool
+     * @throws  InvalidArgumentException
+     */
     protected function validateRelationshipOwner($owningEntityType, $fieldKey)
     {
         $meta = $this->mf->getMetadataForType($owningEntityType);

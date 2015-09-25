@@ -99,7 +99,7 @@ class JsonApiAdapter implements AdapterInterface
                         return $this->findRecord($metadata, $request->getIdentifier(), $request->getFieldset(), $request->getInclusions());
                     }
                 } else {
-                    return $this->findMany($metadata, $request->getPagination(), $request->getFieldset(), $request->getInclusions(), $request->getSorting());
+                    return $this->findMany($metadata, [], $request->getPagination(), $request->getFieldset(), $request->getInclusions(), $request->getSorting());
                 }
                 break;
             case 'POST':
@@ -129,9 +129,9 @@ class JsonApiAdapter implements AdapterInterface
     /**
      * {@inheritDoc}
      */
-    public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
+    public function findMany(EntityMetadata $metadata, array $identifiers = [], array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
     {
-        $resource = $this->getStore()->findMany($metadata, $pagination, $fields, $inclusions, $sort);
+        $resource = $this->getStore()->findMany($metadata, $identifiers, $pagination, $fields, $inclusions, $sort);
         $payload = $this->serialize($resource);
         return $this->createRestResponse(200, $payload);
     }

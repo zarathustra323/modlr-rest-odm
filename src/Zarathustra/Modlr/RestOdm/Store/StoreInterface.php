@@ -28,11 +28,12 @@ interface StoreInterface
      * Finds multiple entities by type.
      *
      * @param   EntityMetadata  $type
+     * @param   array           $identifiers
      * @param   array           $pagination
      * @param   array           $fields
      * @param   array           $inclusions
      * @param   array           $sorts
      * @return  Struct\Resource
      */
-    public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = []);
+    public function findMany(EntityMetadata $metadata, array $identifiers = [], array $pagination = [], array $fields = [], array $inclusions = [], array $sort = []);
 }

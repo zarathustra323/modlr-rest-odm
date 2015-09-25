@@ -38,13 +38,14 @@ interface AdapterInterface
      * Finds a multiple entities by type.
      *
      * @param   EntityMetadata  $metadata
+     * @param   array           $identifiers
      * @param   array           $pagination
      * @param   array           $fields
      * @param   array           $inclusions
      * @param   array           $sort
      * @return  Rest\RestPayload
      */
-    public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = []);
+    public function findMany(EntityMetadata $metadata, array $identifiers = [], array $pagination = [], array $fields = [], array $inclusions = [], array $sort = []);
 
     /**
      * Handles errors and returns an appropriate REST response.

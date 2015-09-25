@@ -23,4 +23,17 @@ class StoreException extends AbstractHttpException
             __FUNCTION__
         );
     }
+
+    public static function invalidInclude($type, $fieldKey)
+    {
+        return new self(
+            sprintf(
+                'The relationship key "%s" was not found on entity "%s"',
+                $fieldKey,
+                $type
+            ),
+            400,
+            __FUNCTION__
+        );
+    }
 }

@@ -47,6 +47,13 @@ class DoctrineMongoDBStore implements StoreInterface
     private $sf;
 
     /**
+     * Entities and identifiers marked for inclusion.
+     *
+     * @var array
+     */
+    private $included = [];
+
+    /**
      * Constructor.
      *
      * @param   MetadataFactory         $mf
@@ -72,54 +79,108 @@ class DoctrineMongoDBStore implements StoreInterface
         if (null === $result) {
             throw StoreException::recordNotFound($metadata->type, $identifier);
         }
-        return $this->hydrateOne($metadata, $identifier, $result);
+        return $this->hydrateOne($metadata, $identifier, $result, $inclusions);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function findMany(EntityMetadata $metadata, array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
+    public function findMany(EntityMetadata $metadata, array $identifiers = [], array $pagination = [], array $fields = [], array $inclusions = [], array $sort = [])
     {
         $className = $this->config->getClassNameForType($metadata->type);
-        $cursor = $this->doctrineQueryRaw($className, [], $fields, $sort)->limit($pagination['limit'])->skip($pagination['offset']);
-        return $this->hydrateMany($metadata, $cursor->toArray());
-    }
 
-    protected function hydrateMany(EntityMetadata $metadata, array $items)
-    {
-        $resource = $this->sf->createResource($metadata->type, 'many');
-        foreach ($items as $identifier => $data) {
-            $entity = $this->hydrateEntity($metadata, $identifier, $data);
-            $this->sf->applyEntity($resource, $entity);
+        $criteria = [];
+        if (!empty($identifiers)) {
+            $criteria['id'] = ['$in' => $identifiers];
         }
-        return $resource;
+        $cursor = $this->doctrineQueryRaw($className, [], $fields, $sort)->limit($pagination['limit'])->skip($pagination['offset']);
+        return $this->hydrateMany($metadata, $cursor->toArray(), $inclusions);
     }
 
     /**
-     * Hydrates a single set of MongoDB array data into a Struct\Resource object.
+     * Hydrates a single MongoDB array record into a Struct\Resource object.
      *
      * @param   EntityMetadata  $metadata
      * @param   string          $identifier
      * @param   array           $data
+     * @param   array           $inclusions
      * @return  Struct\Resource
      */
-    protected function hydrateOne(EntityMetadata $metadata, $identifier, array $data)
+    protected function hydrateOne(EntityMetadata $metadata, $identifier, array $data, array $inclusions)
     {
         $resource = $this->sf->createResource($metadata->type, 'one');
-        $entity = $this->hydrateEntity($metadata, $identifier, $data);
+        $entity = $this->hydrateEntity($metadata, $identifier, $data, $inclusions);
         $this->sf->applyEntity($resource, $entity);
+        $resource->setIncludedData($this->hydrateIncluded());
         return $resource;
     }
 
-    protected function hydrateEntity(EntityMetadata $metadata, $identifier, array $data)
+    /**
+     * Hydrates multiple MongoDB array records into a Struct\Resource object.
+     *
+     * @param   EntityMetadata  $metadata
+     * @param   array           $items
+     * @param   array           $data
+     * @param   array           $inclusions
+     * @return  Struct\Resource
+     */
+    protected function hydrateMany(EntityMetadata $metadata, array $items, array $inclusions)
+    {
+        $resource = $this->sf->createResource($metadata->type, 'many');
+        foreach ($items as $identifier => $data) {
+            $entity = $this->hydrateEntity($metadata, $identifier, $data, $inclusions);
+            $this->sf->applyEntity($resource, $entity);
+        }
+        $resource->setIncludedData($this->hydrateIncluded());
+        return $resource;
+    }
+
+    /**
+     * Hydrates included (side-loaded) data in a Struct\Collection of Struct\Entity objects.
+     *
+     * @return  Struct\Collection
+     */
+    protected function hydrateIncluded()
+    {
+        $collection = $this->sf->createCollection();
+        foreach ($this->included as $type => $identifiers) {
+            $metadata = $this->mf->getMetadataForType($type);
+            $className = $this->config->getClassNameForType($metadata->type);
+
+            $cursor = $this->doctrineQueryRaw($className, ['id' => ['$in' => array_keys($identifiers)]]);
+            foreach ($cursor as $data) {
+                $identifier = $data['_id'];
+                $entity = $this->hydrateEntity($metadata, $identifier, $data, []);
+                $collection->add($entity);
+            }
+        }
+        $this->included = [];
+        return $collection;
+    }
+
+    /**
+     * Hydrates a single MongoDB record into a Struct\Entity object.
+     *
+     * @param   EntityMetadata  $metadata
+     * @param   string          $identifier
+     * @param   array           $data
+     * @param   array           $inclusions
+     * @return  Struct\Entity
+     */
+    protected function hydrateEntity(EntityMetadata $metadata, $identifier, array $data, array $inclusions)
     {
         $metadata = $this->extractPolymorphicMetadata($metadata, $data);
+
+        // @todo This shouldn't run here: findMany will hit this method 50 times!
+        $inclusions = $this->getInclusions($metadata, $inclusions);
+
         $entity = $this->sf->createEntity($metadata->type, $identifier);
         $this->sf->applyAttributes($entity, $data);
 
         $doctrineMeta = $this->getClassMetadata($metadata->type);
 
         foreach ($metadata->getRelationships() as $key => $relMeta) {
+            // @todo THIS MUST USE MODLR METADATA, AS MUTATION FIELDS DON'T EXIST ON DOCTRINE METADATA!!!
             if (false === $doctrineMeta->hasReference($key)) {
                 continue;
             }
@@ -133,12 +194,70 @@ class DoctrineMongoDBStore implements StoreInterface
             $relationship = $this->sf->createRelationship($entity, $key);
             foreach ($references as $reference) {
                 list($referenceId, $referenceType) = $this->extractReference($relMeta, $reference, $fieldMapping['simple']);
+
+                if (false === $relMeta->isInverse && isset($inclusions[$key])) {
+                    // @todo MUST HANDLE INVERSE INCLUSIONS
+                    $this->markForInclusion($referenceType, $referenceId);
+                }
+
                 $this->sf->applyRelationship($entity, $relationship, new Struct\Identifier($referenceId, $referenceType));
             }
         }
         return $entity;
     }
 
+    /**
+     * Marks an entity type and identifier for inclusion.
+     *
+     * @param   string  $type
+     * @param   mixed   $identifier
+     */
+    protected function markForInclusion($type, $identifier)
+    {
+        $this->included[$type][(String) $identifier] = true;
+        return $this;
+    }
+
+    /**
+     * Gets the fields to include, based on defaults, and validates relationship keys.
+     *
+     * @param   EntityMetadata  $metadata
+     * @param   array           $inclusions
+     * @return  array
+     * @throws  StoreException
+     */
+    protected function getInclusions(EntityMetadata $metadata, array $inclusions)
+    {
+        if (empty($inclusions)) {
+            // No inclusions.
+            return $inclusions;
+        }
+        if (isset($inclusions['*'])) {
+            // Include all.
+            $formatted = [];
+            foreach (array_keys($metadata->getRelationships()) as $fieldKey) {
+                $formatted[$fieldKey] = true;
+            }
+            return $formatted;
+        }
+        // Specified.
+        foreach ($inclusions as $fieldKey => $inclusion) {
+            if (false === $metadata->hasRelationship($fieldKey)) {
+                throw StoreException::invalidInclude($metadata->type, $fieldKey);
+            }
+        }
+        return $inclusions;
+    }
+
+    /**
+     * Extracts an entity type and identifier from a Doctrine MongoDB reference.
+     *
+     * @param   RelationshipMetadata    $relMeta
+     * @param   mixed                   $reference
+     * @param   bool                    $simple
+     * @return  array
+     * @throws  RuntimeException
+     */
     protected function extractReference(RelationshipMetadata $relMeta, $reference, $simple)
     {
         $simple = (Boolean) $simple;
@@ -159,6 +278,15 @@ class DoctrineMongoDBStore implements StoreInterface
         return [$referenceId, $extracted->type];
     }
 
+    /**
+     * Extracts the proper, polymorphic metadata, based on the incoming MongoDB data.
+     * If the entity is not polymorphic, the passed metadata is returned.
+     *
+     * @param   EntityMetadata  $metadata
+     * @param   mixed           $data
+     * @return  EntityMetadata
+     * @throws  RuntimeException
+     */
     protected function extractPolymorphicMetadata(EntityMetadata $metadata, $data)
     {
         if (false === $metadata->isPolymorphic()) {
@@ -177,6 +305,12 @@ class DoctrineMongoDBStore implements StoreInterface
         return $this->mf->getMetadataForType($type);
     }
 
+    /**
+     * Gets the Doctrine discriminator field and map for an entity, as an associative array.
+     *
+     * @param   $entityType
+     * @return  array
+     */
     protected function getDoctrineDiscriminator($entityType)
     {
         $doctrineMeta = $this->getClassMetadata($entityType);

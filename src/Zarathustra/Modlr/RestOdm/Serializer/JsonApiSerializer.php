@@ -62,8 +62,10 @@ class JsonApiSerializer implements SerializerInterface
     {
         $primaryData = $resource->getPrimaryData();
         $serialized['data'] = $this->serializeData($primaryData, $adapter);
-        // return $this->serializeIncluded($serialized);
 
+        if (0 === $this->depth && $resource->hasIncludedData()) {
+            $serialized['included'] = $this->serializeData($resource->getIncludedData(), $adapter);
+        }
         return (0 === $this->depth) ? $this->encode($serialized) : $serialized;
     }
 
