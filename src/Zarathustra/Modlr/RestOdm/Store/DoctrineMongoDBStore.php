@@ -111,6 +111,10 @@ class DoctrineMongoDBStore implements StoreInterface
         $resource = $this->sf->createResource($metadata->type, 'one');
         $entity = $this->hydrateEntity($metadata, $identifier, $data, $inclusions);
         $this->sf->applyEntity($resource, $entity);
+        ini_set('xdebug.var_display_max_depth', '10');
+        var_dump(__METHOD__, $this->relationships);
+        die();
+
         $resource->setIncludedData($this->hydrateIncluded());
         return $resource;
     }
@@ -142,6 +146,8 @@ class DoctrineMongoDBStore implements StoreInterface
      */
     protected function hydrateIncluded()
     {
+        var_dump(__METHOD__, $this->included);
+        die();
         $collection = $this->sf->createCollection();
         foreach ($this->included as $type => $identifiers) {
             $metadata = $this->mf->getMetadataForType($type);
@@ -180,28 +186,83 @@ class DoctrineMongoDBStore implements StoreInterface
         $doctrineMeta = $this->getClassMetadata($metadata->type);
 
         foreach ($metadata->getRelationships() as $key => $relMeta) {
+
+
+            // Brevity\Story (id: 55104f3f5eab46c31c0f53cb) has an issue field that relates to
+            // Brevity\Issue via stories.$id = 55104f3f5eab46c31c0f53cb
+
+            // Query map: (if its to be included, query entire object, otherwise just return the id field and type if discriminated)
+            // $toQuery['Brevity\Issue']['stories.$id']['55104f3f5eab46c31c0f53cb'] = true
+
+
+            // Need to then map the result to the owner
+            // $owners['Brevity\Issue']['stories.$id']['55104f3f5eab46c31c0f53cb'][] = 'Brevity\Story::55104f3f5eab46c31c0f53cb::issue';
+
+            // Included map:
+            // $included['Platform\Security\User']['559a93dff220c160acc61b8e'] = true
+            // Really, its $toQuery['Platform\Security\User']['id']['559a93dff220c160acc61b8e'] = true
+
+            // Inverse: Brevity\Story::issue::55104f3f5eab46c31c0f53cb = Brevity\Issue::stories.$id
+
             // @todo THIS MUST USE MODLR METADATA, AS MUTATION FIELDS DON'T EXIST ON DOCTRINE METADATA!!!
             if (false === $doctrineMeta->hasReference($key)) {
                 continue;
             }
-            if (!isset($data[$key]) || ($relMeta->isMany() && !is_array($data[$key]))) {
-                continue;
-            }
 
             $fieldMapping = $doctrineMeta->getFieldMapping($key);
-            $references = $relMeta->isOne() ? [$data[$key]] : $data[$key];
 
-            $relationship = $this->sf->createRelationship($entity, $key);
-            foreach ($references as $reference) {
-                list($referenceId, $referenceType) = $this->extractReference($relMeta, $reference, $fieldMapping['simple']);
+            $this->relationships[$entity->getType()][$entity->getId()][$key] = $relationship = $this->sf->createRelationship($entity, $key);
 
-                if (false === $relMeta->isInverse && isset($inclusions[$key])) {
-                    // @todo MUST HANDLE INVERSE INCLUSIONS
-                    $this->markForInclusion($referenceType, $referenceId);
+            if (true === $relMeta->isInverse) {
+                // Inverse relationship. Will never have data set directly in Mongo.
+                if (!isset($fieldMapping['mappedBy'])) {
+                    throw new RuntimeException('Unable to determine a mapped by field on an inverse relationship.');
                 }
+                $ownerMeta  = $this->mf->getMetadataForType($relationship->getEntityType());
+                $ownerField = $ownerMeta->getRelationship($fieldMapping['mappedBy']);
 
+                $ownerDoctrineMeta = $this->getClassMetadata($ownerMeta->type);
+                $ownerFieldMapping = $ownerDoctrineMeta->getFieldMapping($fieldMapping['mappedBy']);
+
+                var_dump($relationship->getEntityType());
+                $result = $this->doctrineQueryRaw($relationship->getEntityType(), [
+                    'stories.id' => $identifier,
+                ]);
+
+                var_dump(iterator_to_array($result));
+                die();
+
+            } else {
+                // Owning relationship. Must have data set on Mongo object.
+                if (!isset($data[$key]) || ($relMeta->isMany() && !is_array($data[$key]))) {
+                    // No data found.
+                    continue;
+                }
+                $references = $relMeta->isOne() ? [$data[$key]] : $data[$key];
+                foreach ($references as $reference) {
+                    list($referenceId, $referenceType) = $this->extractReference($relMeta, $reference, $fieldMapping['simple']);
+                }
                 $this->sf->applyRelationship($entity, $relationship, new Struct\Identifier($referenceId, $referenceType));
             }
+
+            // // Owning relationship.
+            // if (!isset($data[$key]) || ($relMeta->isMany() && !is_array($data[$key]))) {
+            //     continue;
+            // }
+
+            // $fieldMapping = $doctrineMeta->getFieldMapping($key);
+            // $references = $relMeta->isOne() ? [$data[$key]] : $data[$key];
+
+            // $relationship = $this->sf->createRelationship($entity, $key);
+            // foreach ($references as $reference) {
+            //     list($referenceId, $referenceType) = $this->extractReference($relMeta, $reference, $fieldMapping['simple']);
+
+            //     if (isset($inclusions[$key])) {
+            //         $this->markForInclusion($referenceType, $referenceId);
+            //     }
+
+            //     $this->sf->applyRelationship($entity, $relationship, new Struct\Identifier($referenceId, $referenceType));
+            // }
         }
         return $entity;
     }
